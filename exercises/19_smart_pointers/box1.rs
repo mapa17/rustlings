@@ -1,7 +1,13 @@
 // box1.rs
 //
-// At compile time, Rust needs to know how much space a type takes up. This
-// becomes problematic for recursive types, where a value can have as part of
+// At compile time, Rust needs to know how much space a type takes up.
+
+
+// NOTE: rust needs to know this because it allocates per default variables on 
+// the stack, and it can only do so, knowing how much memory to allocate on the stack.
+
+
+// This becomes problematic for recursive types, where a value can have as part of
 // itself another value of the same type. To get around the issue, we can use a
 // `Box` - a smart pointer used to store data on the heap, which also allows us
 // to wrap a recursive type.
@@ -18,11 +24,9 @@
 //
 // Execute `rustlings hint box1` or use the `hint` watch subcommand for a hint.
 
-// I AM NOT DONE
-
 #[derive(PartialEq, Debug)]
 pub enum List {
-    Cons(i32, List),
+    Cons(i32, Box<List>),
     Nil,
 }
 
@@ -35,11 +39,11 @@ fn main() {
 }
 
 pub fn create_empty_list() -> List {
-    todo!()
+    List::Nil
 }
 
 pub fn create_non_empty_list() -> List {
-    todo!()
+    List::Cons(42, Box::new(create_empty_list()))
 }
 
 #[cfg(test)]
@@ -56,3 +60,46 @@ mod tests {
         assert_ne!(create_empty_list(), create_non_empty_list())
     }
 }
+
+pub struct LinkedList<T> {
+    pub val: Option<T>,
+    pub next: Option<Box<LinkedList<T>>>,
+}
+
+impl<T> LinkedList<T> {
+    pub fn empty() -> LinkedList<T> {
+        LinkedList{val: None, next: None}
+    }
+    pub fn new(val: T) -> LinkedList<T> {
+        LinkedList{val: Some(val), next: None}        
+    }
+
+    pub fn add (& mut self, other: T) {
+        if self.val.is_some() {
+            self.next = Some(Box::new(LinkedList::new(other)));
+        } else {
+            self.val = Some(other);
+        }                    
+    }
+}
+
+#[cfg(test)]
+mod tests2 {
+    use super::*;
+
+    #[test]
+    fn test_mylist_creation() {
+
+        let mut empty_list: LinkedList<i32> = LinkedList::empty();
+        println!("Created an empty LinkedList!");
+
+        let mut my_list: LinkedList<i32> = LinkedList::new(42);
+        println!("Created an LinkedList with a single element!");
+
+        empty_list.add(42);
+        // TODO: check if equal to my_list
+
+        my_list.add(100);
+    }
+}
+
